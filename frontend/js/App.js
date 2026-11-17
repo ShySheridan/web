@@ -97,10 +97,8 @@ class App {
             return false;
         }
 
-        if (x < -5 || x > 3) {
-            this.showError(
-                "X должен находиться в диапазоне от -5 до 3."
-            );
+        if (!this.isInRange(this.xInput.value, -5, 3)) {
+            this.showError("X должен находиться в диапазоне от -5 до 3.");
             return false;
         }
 
@@ -187,6 +185,25 @@ class App {
             minute: "2-digit",
             second: "2-digit"
         });
+    }
+
+    isInRange(value, min, max) {
+        const text = value.trim().replace(",", ".");
+
+        if (!/^[+-]?(\d+(\.\d*)?|\.\d+)$/.test(text)) {
+            return false;
+        }
+
+        const sign = text.startsWith("-") ? -1n : 1n;
+        const unsigned = text.replace(/^[+-]/, "");
+        const [integer, fraction = ""] = unsigned.split(".");
+
+        const exact = sign * BigInt((integer || "0") + fraction);
+
+        const scale = 10n ** BigInt(fraction.length);
+
+        return exact >= BigInt(min) * scale &&
+            exact <= BigInt(max) * scale;
     }
 }
 
