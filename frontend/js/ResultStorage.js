@@ -1,50 +1,27 @@
 export class ResultStorage {
-
-    constructor() {
-        this.storageKey = "point-check-results";
-    }
+    prefix = "point-check:lab2:";
 
     getAll() {
-        const data = localStorage.getItem(this.storageKey);
-
-        if (data === null) {
-            return [];
-        }
-
-        try {
-            const results = JSON.parse(data);
-
-            if (!Array.isArray(results)) {
-                return [];
+        const rows = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key?.startsWith(this.prefix)) continue;
+            try {
+                const row = JSON.parse(localStorage.getItem(key));
+                if (row && typeof row.hit === "boolean" && Number.isFinite(row.r)
+                    && Number.isFinite(row.x) && Number.isFinite(Number(row.y))
+                    && Number.isFinite(row.elapsedNanos) && Number.isFinite(Date.parse(row.timestamp))) {
+                    rows.push(row);
+                }
+            } catch (error) {
+                if (!(error instanceof SyntaxError)) throw error;
             }
-
-            return results;
-        } catch (error) {
-            console.error(
-                "Не удалось прочитать результаты из LocalStorage:",
-                error
-            );
-
-            return [];
         }
+        return rows.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
     }
 
-    add(result) {
-        const results = this.getAll();
-
-        results.push(result);
-
-        this.save(results);
-    }
-
-    save(results) {
-        localStorage.setItem(
-            this.storageKey,
-            JSON.stringify(results)
-        );
-    }
-
-    clear() {
-        localStorage.removeItem(this.storageKey);
+    add(row) {
+        // Свой ключ на запрос позволяет двум вкладкам одновременно добавлять строки.
+        localStorage.setItem(this.prefix + row.id, JSON.stringify(row));
     }
 }

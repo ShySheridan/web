@@ -1,36 +1,20 @@
+// Геометрию проверяет Java. Клиент отправляет значения в теле POST.
 export class AreaChecker {
+    async check(url, fields) {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Accept": "application/json" },
+            body: new URLSearchParams(fields)
+        });
 
-    isHit(x, y, r) {
-        return (
-            this.isInTriangle(x, y, r) ||
-            this.isInCircle(x, y, r) ||
-            this.isInRectangle(x, y, r)
-        );
-    }
+        if (!response.headers.get("Content-Type")?.includes("application/json")) {
+            throw new Error(`Сервер не вернул результат (HTTP ${response.status}).`);
+        }
 
-    isInTriangle(x, y, r) {
-        return (
-            x >= -r &&
-            x <= 0 &&
-            y >= 0 &&
-            y <= x + r
-        );
-    }
-
-    isInCircle(x, y, r) {
-     return (
-            x >= 0 &&
-            y >= 0 &&
-            x * x + y * y <= r * r
-        );
-    }
-
-    isInRectangle(x, y, r) {
-      return (
-            x >= 0 &&
-            x <= r / 2 &&
-            y >= -r &&
-            y <= 0
-        );
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || `Ошибка HTTP ${response.status}.`);
+        }
+        return data;
     }
 }

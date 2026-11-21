@@ -1,0 +1,20 @@
+import java.math.BigDecimal;
+
+// Параметры здесь уже проверены. BigDecimal сохраняет точность на границах.
+record Point(BigDecimal x, BigDecimal y, int r) {
+    boolean isHit() {
+        BigDecimal radius = BigDecimal.valueOf(r);
+        BigDecimal half = radius.divide(BigDecimal.valueOf(2));
+
+        boolean square = x.signum() >= 0 && x.compareTo(radius) <= 0
+                && y.signum() >= 0 && y.compareTo(radius) <= 0;
+
+        boolean triangle = x.signum() <= 0 && y.signum() >= 0
+                && y.compareTo(x.add(half)) <= 0;
+
+        boolean quarterDisk = x.signum() >= 0 && y.signum() <= 0
+                && x.multiply(x).add(y.multiply(y)).compareTo(half.multiply(half)) <= 0;
+
+        return square || triangle || quarterDisk;
+    }
+}

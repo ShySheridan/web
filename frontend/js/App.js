@@ -5,207 +5,107 @@ import { ResultStorage } from "./ResultStorage.js";
 class App {
     constructor() {
         this.form = document.getElementById("point-form");
-        this.xInput = document.getElementById("x");
-        this.rInput = document.getElementById("r");
-
-        this.errorMessage = document.getElementById("error-message");
-
+        this.rInput = this.form.elements.r;
+        this.error = document.getElementById("error-message");
+        this.button = document.getElementById("submit-button");
         this.resultsBody = document.getElementById("results-body");
-
-        this.canvas = document.getElementById("graph");
-
-        this.areaChecker = new AreaChecker();
+        this.checker = new AreaChecker();
         this.storage = new ResultStorage();
-        this.renderer = new CanvasRenderer(this.canvas);
+        this.renderer = new CanvasRenderer(document.getElementById("graph"));
+        this.results = [];
     }
 
     init() {
-        this.form.addEventListener("submit", (event) => {
-            this.handleSubmit(event);
+        this.form.addEventListener("submit", event => this.handleSubmit(event));
+        this.rInput.addEventListener("change", () => this.drawGraph());
+        window.addEventListener("storage", event => {
+            if (event.key === null || event.key.startsWith(this.storage.prefix)) this.loadResults();
         });
-
-        this.renderTable();
-
-        this.renderer.draw(3);
+        this.loadResults();
     }
 
-    handleSubmit(event) {
+    loadResults() {
+        try {
+            this.results = this.storage.getAll();
+        } catch {
+            this.error.textContent = "Браузер ограничил доступ к сохранённой истории.";
+        }
+        this.render();
+    }
+
+    async handleSubmit(event) {
         event.preventDefault();
-
-        this.clearError();
-
-        const x = this.parseNumber(this.xInput.value);
-        const y = this.getSelectedY();
-        const r = this.parseNumber(this.rInput.value);
-
-        if (!this.validate(x, y, r)) {
+        if (this.button.disabled) return;
+        this.error.textContent = "";
+        const fields = new FormData(this.form);
+        const y = fields.get("y").trim().replace("−", "-").replace(",", ".");
+        if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(y)) {
+            this.error.textContent = "Введите десятичное число для Y.";
+            return;
+        }
+        // У граничных значений −5 и 3 после точки допустимы только нули.
+        const allowedY = y.startsWith("-")
+            ? /^-0*(?:[0-4](?:\.\d*)?|5(?:\.0*)?|\.\d+)$/
+            : /^\+?0*(?:[0-2](?:\.\d*)?|3(?:\.0*)?|\.\d+)$/;
+        if (!allowedY.test(y)) {
+            this.error.textContent = "Y должен быть от −5 до 3 включительно.";
             return;
         }
 
-        const hit = this.areaChecker.isHit(x, y, r);
-
-        const result = {
-            x: x,
-            y: y,
-            r: r,
-            hit: hit,
-
-            timestamp: Date.now()
-        };
-
-        this.storage.add(result);
-
-        this.renderTable();
-
-        this.renderer.draw(r);
-        this.renderer.drawPoint(x, y, hit);
-    }
-
-
-    parseNumber(value) {
-        const normalizedValue = value
-            .trim()
-            .replace(",", ".");
-
-        if (normalizedValue === "") {
-            return NaN;
-        }
-
-
-        if (!/^[+-]?(\d+(\.\d*)?|\.\d+)$/.test(normalizedValue)) {
-            return NaN;
-        }
-
-        return Number(normalizedValue);
-    }
-
-    getSelectedY() {
-        const selectedY = document.querySelector(
-            'input[name="y"]:checked'
-        );
-
-        if (selectedY === null) {
-            return null;
-        }
-
-        return Number(selectedY.value);
-    }
-
-    validate(x, y, r) {
-        if (!Number.isFinite(x)) {
-            this.showError("X должен быть числом.");
-            return false;
-        }
-
-        if (!this.isInRange(this.xInput.value, -5, 3)) {
-            this.showError("X должен находиться в диапазоне от -5 до 3.");
-            return false;
-        }
-
-        if (y === null) {
-            this.showError("Выберите значение Y.");
-            return false;
-        }
-
-        const allowedYValues = [
-            -3, -2, -1, 0, 1, 2, 3, 4, 5
-        ];
-
-        if (!allowedYValues.includes(y)) {
-            this.showError("Выбрано недопустимое значение Y.");
-            return false;
-        }
-
-        if (!Number.isFinite(r)) {
-            this.showError("R должен быть числом.");
-            return false;
-        }
-
-        if (r < 2 || r > 5) {
-            this.showError(
-                "R должен находиться в диапазоне от 2 до 5."
-            );
-            return false;
-        }
-
-        return true;
-    }
-
-    showError(message) {
-        this.errorMessage.textContent = message;
-    }
-
-    clearError() {
-        this.errorMessage.textContent = "";
-    }
-
-    renderTable() {
-        this.resultsBody.innerHTML = "";
-
-        const results = this.storage.getAll();
-
-        for (const result of results) {
-            const row = document.createElement("tr");
-
-            const xCell = document.createElement("td");
-            const yCell = document.createElement("td");
-            const rCell = document.createElement("td");
-            const hitCell = document.createElement("td");
-            const dateCell = document.createElement("td");
-
-            xCell.textContent = result.x;
-            yCell.textContent = result.y;
-            rCell.textContent = result.r;
-
-            hitCell.textContent = result.hit
-                ? "Попадание"
-                : "Промах";
-
-            dateCell.textContent =
-                this.formatDate(result.timestamp);
-
-            row.appendChild(xCell);
-            row.appendChild(yCell);
-            row.appendChild(rCell);
-            row.appendChild(hitCell);
-            row.appendChild(dateCell);
-
-            this.resultsBody.appendChild(row);
+        fields.set("y", y);
+        this.button.disabled = true;
+        this.button.textContent = "Проверка…";
+        try {
+            const row = await this.checker.check(this.form.action, fields);
+            this.results.unshift(row);
+            try {
+                this.storage.add(row);
+            } catch {
+                this.error.textContent = "Точка проверена. Браузеру не удалось сохранить результат.";
+            }
+            this.render();
+        } catch (error) {
+            this.error.textContent = error instanceof TypeError
+                ? "Не удалось связаться с сервером." : error.message;
+        } finally {
+            this.button.disabled = false;
+            this.button.textContent = "Проверить";
         }
     }
 
-    formatDate(timestamp) {
-        const date = new Date(timestamp);
-
-        return date.toLocaleString("ru-RU", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
-        });
+    drawGraph() {
+        const r = Number(this.rInput.value);
+        const points = this.results.filter(row => row.r === r);
+        this.renderer.draw(r, points);
+        for (const row of points.slice().reverse()) {
+            this.renderer.drawPoint(row.x, Number(row.y), row.hit);
+        }
     }
 
-    isInRange(value, min, max) {
-        const text = value.trim().replace(",", ".");
-
-        if (!/^[+-]?(\d+(\.\d*)?|\.\d+)$/.test(text)) {
-            return false;
+    render() {
+        this.drawGraph();
+        this.resultsBody.replaceChildren();
+        if (!this.results.length) {
+            const cell = this.resultsBody.insertRow().insertCell();
+            cell.colSpan = 6;
+            cell.className = "empty";
+            cell.textContent = "Проверок пока нет";
+            return;
         }
-
-        const sign = text.startsWith("-") ? -1n : 1n;
-        const unsigned = text.replace(/^[+-]/, "");
-        const [integer, fraction = ""] = unsigned.split(".");
-
-        const exact = sign * BigInt((integer || "0") + fraction);
-
-        const scale = 10n ** BigInt(fraction.length);
-
-        return exact >= BigInt(min) * scale &&
-            exact <= BigInt(max) * scale;
+        for (const result of this.results) {
+            const row = this.resultsBody.insertRow();
+            row.insertCell().textContent = result.x;
+            row.insertCell().textContent = result.y;
+            row.insertCell().textContent = result.r;
+            const hit = row.insertCell();
+            hit.className = result.hit ? "hit" : "miss";
+            hit.textContent = result.hit ? "Попадание" : "Промах";
+            row.insertCell().textContent = new Date(result.timestamp).toLocaleString("ru-RU");
+            row.insertCell().textContent = (result.elapsedNanos / 1000).toLocaleString("ru-RU", {
+                maximumFractionDigits: 3
+            });
+        }
     }
 }
 
-const app = new App();
-app.init();
+new App().init();

@@ -1,428 +1,80 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Проверка попадания точки</title>
-
-    <style>
-
-        body {
-            margin: 0;
-            padding: 0;
-
-            font-family: Arial, sans-serif;
-            color: #222;
-
-            background-color: #f4f4f4;
-        }
-
-        header {
-            padding: 20px;
-
-            background-color: #222;
-            color: white;
-
-
-            font-family: Arial, sans-serif;
-            font-size: 18px;
-        }
-
-        main {
-            width: 90%;
-            max-width: 1100px;
-
-            margin: 30px auto;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        label {
-            font-weight: bold;
-        }
-
-        input {
-            padding: 8px;
-            border: 1px solid #aaa;
-            border-radius: 4px;
-        }
-
-        button {
-            padding: 10px 16px;
-
-            border: none;
-            border-radius: 4px;
-
-            cursor: pointer;
-
-            font-size: 15px;
-        }
-
-        table {
-            width: 100%;
-
-            border-collapse: collapse;
-
-            background-color: white;
-        }
-
-        th,
-        td {
-            padding: 10px;
-
-            border: 1px solid #ccc;
-
-            text-align: center;
-        }
-
-        th {
-            background-color: #333;
-            color: white;
-        }
-
-
-        #student-info {
-            margin: 0;
-        }
-
-        #main-content {
-            display: flex;
-
-            gap: 40px;
-
-            align-items: flex-start;
-        }
-
-        #graph-container {
-            padding: 20px;
-
-            background-color: white;
-
-            border-radius: 8px;
-        }
-
-        #graph {
-            display: block;
-
-            border: 1px solid #aaa;
-        }
-
-        #form-container {
-            flex: 1;
-
-            padding: 25px;
-
-            background-color: white;
-
-            border-radius: 8px;
-        }
-
-        #results-section {
-            margin-top: 30px;
-
-            padding: 20px;
-
-            background-color: white;
-
-            border-radius: 8px;
-        }
-
-        #submit-button {
-            background-color: #333;
-            color: white;
-        }
-
-        #submit-button:hover {
-            background-color: #555;
-        }
-
-        #error-message {
-            min-height: 20px;
-
-            color: #c00000;
-
-            font-size: 14px;
-        }
-
-
-        header p {
-            margin: 4px 0;
-        }
-
-        form input {
-            font-size: 14px;
-        }
-
-        #results-section h2 {
-            margin-top: 0;
-        }
-
-
-        header > h1 {
-            margin-top: 0;
-
-            font-size: 28px;
-        }
-
-        form > div {
-            display: flex;
-            flex-direction: column;
-
-            gap: 7px;
-        }
-
-
-        .radio-group {
-            display: flex;
-
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .radio-group label {
-            display: flex;
-
-            align-items: center;
-            gap: 4px;
-
-            padding: 5px 8px;
-
-            border: 1px solid #ccc;
-            border-radius: 4px;
-
-            cursor: pointer;
-        }
-
-
-        button {
-            background-color: #888;
-        }
-
-        #submit-button {
-            background-color: #333;
-        }
-
-
-        @media (max-width: 850px) {
-            #main-content {
-                flex-direction: column;
-            }
-
-            #graph-container,
-            #form-container {
-                width: 100%;
-                box-sizing: border-box;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/style.css">
 </head>
-
-
 <body>
-
 <header>
-
-    <div id="student-info">
-        <p>ФИО: Амина Умарова</p>
-        <p>Группа: P3217</p>
-        <p>Вариант: 22624</p>
+    <div class="wrap">
+        <h1>Проверка попадания точки</h1>
+        <p id="student-info">Амина Умарова · Группа P3217 · Вариант 22624</p>
     </div>
 </header>
 
-
-<main>
-
+<main class="wrap">
     <div id="main-content">
-
-        <div id="graph-container">
-
-            <canvas
-                    id="graph"
-                    width="420"
-                    height="420">
-                Ваш браузер не поддерживает Canvas.
+        <section id="graph-container">
+            <h2>Координатная плоскость</h2>
+            <canvas id="graph" width="420" height="420" aria-label="Область попадания на координатной плоскости">
+                Квадрат в I четверти со стороной R, треугольник во II четверти с катетами R/2
+                и четверть круга в IV четверти радиуса R/2.
             </canvas>
-
-        </div>
-
-
-
-        <div id="form-container">
-
-            <h2>Введите координаты точки</h2>
-
-            <form id="point-form">
-
-
-                <div>
-                    <label for="x">
-                        X (-5 ... 3)
-                    </label>
-
-                    <input
-                            id="x"
-                            name="x"
-                            type="text"
-                            inputmode="decimal"
-                            placeholder="Например: 1.5"
-                            autocomplete="off">
+        </section>
+        <section id="form-container">
+            <h2>Координаты точки</h2>
+            <form id="point-form" action="fcgi-bin/check" method="post">
+                <div class="field">
+                    <label for="x">Координата X</label>
+                    <select id="x" name="x" required>
+                        <option>-2</option>
+                        <option>-1.5</option>
+                        <option>-1</option>
+                        <option>-0.5</option>
+                        <option selected>0</option>
+                        <option>0.5</option>
+                        <option>1</option>
+                        <option>1.5</option>
+                        <option>2</option>
+                    </select>
                 </div>
-
-
-                <div>
-                    <span>
-                        Y
-                    </span>
-
-                    <div class="radio-group">
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="y"
-                                    value="-3">
-                            -3
-                        </label>
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="y"
-                                    value="-2">
-                            -2
-                        </label>
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="y"
-                                    value="-1">
-                            -1
-                        </label>
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="y"
-                                    value="0">
-                            0
-                        </label>
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="y"
-                                    value="1">
-                            1
-                        </label>
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="y"
-                                    value="2">
-                            2
-                        </label>
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="y"
-                                    value="3">
-                            3
-                        </label>
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="y"
-                                    value="4">
-                            4
-                        </label>
-
-                        <label>
-                            <input
-                                    type="radio"
-                                    name="y"
-                                    value="5">
-                            5
-                        </label>
-
-                    </div>
+                <div class="field">
+                    <label for="y">Координата Y</label>
+                    <input id="y" name="y" type="text" inputmode="decimal" required
+                           placeholder="Например, −1,5" autocomplete="off" aria-describedby="y-range">
+                    <small id="y-range">−5 &lt; Y &lt; 3</small>
                 </div>
-
-
-                <div>
-                    <label for="r">
-                        R (2 ... 5)
-                    </label>
-
-                    <input
-                            id="r"
-                            name="r"
-                            type="text"
-                            inputmode="decimal"
-                            placeholder="Например: 3"
-                            autocomplete="off">
+                <div class="field">
+                    <label for="r">Радиус R</label>
+                    <select id="r" name="r" required>
+                        <option>1</option>
+                        <option>2</option>
+                        <option selected>3</option>
+                        <option>4</option>
+                        <option>5</option>
+                    </select>
                 </div>
-
-
-
-                <div id="error-message"></div>
-
-
-
-                <button
-                        id="submit-button"
-                        type="submit">
-                    Проверить
-                </button>
-
+                <button id="submit-button" type="submit">Проверить</button>
+                <p id="error-message" role="alert"></p>
             </form>
-
-        </div>
-
+        </section>
     </div>
-
-
-
     <section id="results-section">
-
         <h2>Результаты проверок</h2>
-
-        <table id="results-table">
-
-            <thead>
-            <tr>
-                <th>X</th>
-                <th>Y</th>
-                <th>R</th>
-                <th>Результат</th>
-                <th>Дата и время</th>
-            </tr>
-            </thead>
-
-            <tbody id="results-body">
-            </tbody>
-
-        </table>
-
+        <div class="table-scroll">
+            <table id="results-table">
+                <thead><tr>
+                    <th scope="col">X</th><th scope="col">Y</th><th scope="col">R</th>
+                    <th scope="col">Результат</th><th scope="col">Дата и время</th>
+                    <th scope="col">Обработка, мкс</th>
+                </tr></thead>
+                <tbody id="results-body"></tbody>
+            </table>
+        </div>
     </section>
-
 </main>
-
-
-<script
-        type="module"
-        src="js/App.js">
-</script>
-
+<script type="module" src="js/App.js"></script>
 </body>
-
 </html>

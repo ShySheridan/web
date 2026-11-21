@@ -8,21 +8,21 @@ export class CanvasRenderer {
         this.centerY = canvas.height / 2;
 
         this.scale = 1;
-        this.currentR = 1;
     }
 
-    draw(r) {
-        this.currentR = r;
-
-        const radiusInPixels =
-            Math.min(this.canvas.width, this.canvas.height) * 0.32;
-
-        this.scale = radiusInPixels / r;
+    draw(r, points = []) {
+        // Оставляем место и для промахов, которые выходят за пределы ±R.
+        let extent = r;
+        for (const point of points) {
+            extent = Math.max(extent, Math.abs(point.x), Math.abs(Number(point.y)));
+        }
+        this.axisLength = Math.min(this.centerX, this.centerY) * 0.84;
+        this.scale = this.axisLength / (extent * 1.18);
 
         this.clear();
 
         this.drawArea(r);
-        this.drawAxes(r);
+        this.drawAxes();
         this.drawLabels(r);
     }
 
@@ -46,7 +46,7 @@ export class CanvasRenderer {
     drawArea(r) {
         this.ctx.save();
 
-        this.ctx.fillStyle = "rgba(52, 152, 219, 0.85)";
+        this.ctx.fillStyle = "#3399ff";
 
         this.drawTriangle(r);
         this.drawCircleSector(r);
@@ -56,8 +56,8 @@ export class CanvasRenderer {
     }
 
     drawTriangle(r) {
-        const first = this.toCanvas(-r, 0);
-        const second = this.toCanvas(0, r);
+        const first = this.toCanvas(-r / 2, 0);
+        const second = this.toCanvas(0, r / 2);
         const third = this.toCanvas(0, 0);
 
         this.ctx.beginPath();
@@ -71,61 +71,29 @@ export class CanvasRenderer {
     }
 
     drawCircleSector(r) {
-        const radius = r * this.scale;
-
-
+        const radius = (r / 2) * this.scale;
         this.ctx.beginPath();
-
-        this.ctx.moveTo(
-            this.centerX,
-            this.centerY
-        );
-
-        this.ctx.lineTo(
-            this.centerX,
-            this.centerY - radius
-        );
-
-        this.ctx.arc(
-            this.centerX,
-            this.centerY,
-            radius,
-            -Math.PI / 2,
-            0,
-            false
-        );
-
+        this.ctx.moveTo(this.centerX, this.centerY);
+        // У Canvas ось Y направлена вниз: от 0 до π/2 — правая нижняя четверть.
+        this.ctx.arc(this.centerX, this.centerY, radius, 0, Math.PI / 2);
         this.ctx.closePath();
-
         this.ctx.fill();
     }
 
     drawRectangle(r) {
-        const topLeft = this.toCanvas(0, 0);
-        const bottomRight = this.toCanvas(r / 2, -r);
-
-        const width =
-            bottomRight.x - topLeft.x;
-
-        const height =
-            bottomRight.y - topLeft.y;
-
-        this.ctx.fillRect(
-            topLeft.x,
-            topLeft.y,
-            width,
-            height
-        );
+        const topLeft = this.toCanvas(0, r);
+        const side = r * this.scale;
+        this.ctx.fillRect(topLeft.x, topLeft.y, side, side);
     }
 
-    drawAxes(r) {
+    drawAxes() {
         this.ctx.save();
 
         this.ctx.strokeStyle = "black";
         this.ctx.fillStyle = "black";
         this.ctx.lineWidth = 1.5;
 
-        const axisLength = r * 1.25 * this.scale;
+        const axisLength = this.axisLength;
 
 
         this.ctx.beginPath();
@@ -205,7 +173,7 @@ export class CanvasRenderer {
         this.ctx.fillStyle = "black";
         this.ctx.strokeStyle = "black";
 
-        this.ctx.font = "14px Arial";
+        this.ctx.font = r * this.scale < 60 ? "10px Arial" : "14px Arial";
 
 
         this.drawXTick(-r, "-R");
@@ -222,7 +190,7 @@ export class CanvasRenderer {
         this.drawYTick(-r, "-R");
 
 
-        const axisLength = r * 1.25 * this.scale;
+        const axisLength = this.axisLength;
 
         this.ctx.fillText(
             "X",
