@@ -11,7 +11,6 @@ export class CanvasRenderer {
     }
 
     draw(r, points = []) {
-        // Оставляем место и для промахов, которые выходят за пределы ±R.
         let extent = r;
         for (const point of points) {
             extent = Math.max(extent, Math.abs(point.x), Math.abs(Number(point.y)));

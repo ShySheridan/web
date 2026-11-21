@@ -21,7 +21,6 @@ export class ResultStorage {
     }
 
     add(row) {
-        // Свой ключ на запрос позволяет двум вкладкам одновременно добавлять строки.
         localStorage.setItem(this.prefix + row.id, JSON.stringify(row));
     }
 }

@@ -1,6 +1,5 @@
 import java.math.BigDecimal;
 
-// Параметры здесь уже проверены. BigDecimal сохраняет точность на границах.
 record Point(BigDecimal x, BigDecimal y, int r) {
     boolean isHit() {
         BigDecimal radius = BigDecimal.valueOf(r);

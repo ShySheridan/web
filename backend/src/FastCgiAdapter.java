@@ -25,7 +25,6 @@ final class FastCgiAdapter {
         }
         var fcgi = new FCGIInterface();
         while (accept(fcgi)) {
-            // Библиотека подменяет системные потоки при каждом успешном FCGIaccept().
             serve(FCGIInterface.request.params, System.in, System.out);
         }
         log.println("FastCGI завершил приём запросов. Проверьте порт и журнал сервера.");
@@ -71,13 +70,11 @@ final class FastCgiAdapter {
             try {
                 return fcgi.FCGIaccept() >= 0;
             } catch (IndexOutOfBoundsException error) {
-                // Приложенная библиотека так обрабатывает разрыв соединения до первого пакета.
                 var request = FCGIInterface.request;
                 if (request == null || request.socket == null) throw error;
                 try {
                     request.socket.close();
                 } catch (IOException ignored) {
-                    // Соединение уже закрыто.
                 }
                 FCGIInterface.request = null;
             }

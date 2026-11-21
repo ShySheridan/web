@@ -1,4 +1,3 @@
-// Геометрию проверяет Java. Клиент отправляет значения в теле POST.
 export class AreaChecker {
     async check(url, fields) {
         const response = await fetch(url, {
