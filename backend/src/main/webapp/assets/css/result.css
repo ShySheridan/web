@@ -1,0 +1,11 @@
+body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: #182532; background: #f3f6fa; }
+header { background: #142b43; color: white; padding: 1.2rem max(1rem, calc((100% - 800px)/2)); }
+header h1 { margin: 0; font-size: 1.5rem; }
+main { max-width: 800px; margin: 1.5rem auto; padding: 0 1rem; }
+section { background: white; border: 1px solid #dce4ec; border-radius: 12px; padding: 1.2rem; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+th, td { text-align: left; padding: .65rem; border-bottom: 1px solid #e1e7ed; }
+.hit { color: #167342; font-weight: 700; }
+.miss { color: #a52222; font-weight: 700; }
+.back-link { display: inline-block; font: inherit; background: #1769aa; color: white; border-radius: 6px; padding: .65rem 1rem; text-decoration: none; }
+canvas { display: block; width: min(100%, 420px); aspect-ratio: 1; border: 1px solid #dce4ec; border-radius: 8px; }
